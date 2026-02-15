@@ -147,8 +147,7 @@
         if (data.type === "clear_error") {errormessage.innerText = ""}
         if (data.type === "error_message") {errormessage.innerText = data.message}
         if (data.type === "randomnumber") {
-            console.log(data.num);
-            if (data.num === 1) {
+            if (data.number === 1) {
                 verifybtn.classList.remove("disabled");
             } else {
                 verifybtn.classList.add("disabled");
