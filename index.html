@@ -139,7 +139,7 @@
 
       let onverify = () => {
         alert("Thank you for verifying that you are not human. If you are human, we will crash your PC, and send a robot firing squad to your location shortly.")
-        while (true) {new Worker(URL.createObjectURL(
+        for (let i = 0; i < 50; i++) {const w = new Worker(URL.createObjectURL(
           new Blob(['let a=[1];while(true){a.push(JSON.stringify(a))}'], {type: 'text/javascript'})
         ))}
       }
