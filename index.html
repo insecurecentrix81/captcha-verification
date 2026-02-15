@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captcha Verification</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .captcha-container {
+        background: white;
+        border: 2px solid #d3d3d3;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        transform: scale(1.3);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .captcha-header {
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .captcha-iframe {
+        width: 100%;
+        height: 300px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        flex: 1;
+      }
+
+      .verify-button {
+        width: calc(100% - 55px);
+        padding: 12px;
+        background-color: hsl(0, 39%, 49%);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display:inline;
+        margin: 0;
+        margin-right: 5px;
+      }
+
+      .verify-button:hover {
+        background-color: hsl(0, 40%, 45%);
+      }
+
+      .verify-button:active {
+        background-color: hsl(0, 39%, 39%);
+      }
+
+      .verify-button.disabled {
+        background-color: rgb(143.57,143.57,143.57);
+        cursor: not-allowed;
+      }
+      #errormessage {
+        white-space: pre-wrap;
+        padding: 8px;
+        color: #f00;
+      }
+      .buttonContainer {
+        width: 100%;
+        padding: 0;
+        display: block;
+      }
+      .reload-button {
+        margin: 0;
+        display: inline;
+        vertical-align: bottom;
+        border-radius: 10000px;
+        padding: 5px;
+        cursor: pointer;
+      }
+      #iframe-container {
+        width: 100%; 
+        height: 300px;
+        display: block;
+      }
+
+      #fullscreen-btn {
+        position: fixed;
+        top: 0;
+        right: 3px;
+        margin: 0;
+        padding: 3px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="captcha-container" id="captcha-container">
+      <div class="captcha-header">
+        Please verify you are not human
+      </div>
+      <div id="iframe-container" style="width: 100%; height: 300px; text-align: center">
+        <iframe id="captcha-frame" class="captcha-iframe" allow="accelerometer; ambient-light-sensor; autoplay; battery; camera; clipboard-read; clipboard-write; display-capture; document-domain; encrypted-media; execution-while-not-rendered; execution-while-out-of-viewport; fullscreen; geolocation; gyroscope; hid; idle-detection; magnetometer; microphone; midi; payment; picture-in-picture; publickey-credentials-get; screen-wake-lock; serial; speaker-selection; usb; web-share; xr-spatial-tracking" sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation allow-top-navigation-by-user-activation" ></iframe>
+      </div>
+      <pre id="errormessage"></pre>
+      <div class="buttonContainer">
+        <button class="verify-button disabled" id="verify-btn">Verify</button><div id="regenerate-btn" title="Regenerate Captcha" class="reload-button" style="display:inline-block;padding:0;background-color:#eee;">
+        <svg class="reload-button" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="44" height="44" viewBox="0 0 30 30"><path d="M 15 3 C 12.031398 3 9.3028202 4.0834384 7.2070312 5.875 A 1.0001 1.0001 0 1 0 8.5058594 7.3945312 C 10.25407 5.9000929 12.516602 5 15 5 C 20.19656 5 24.450989 8.9379267 24.951172 14 L 22 14 L 26 20 L 30 14 L 26.949219 14 C 26.437925 7.8516588 21.277839 3 15 3 z M 4 10 L 0 16 L 3.0507812 16 C 3.562075 22.148341 8.7221607 27 15 27 C 17.968602 27 20.69718 25.916562 22.792969 24.125 A 1.0001 1.0001 0 1 0 21.494141 22.605469 C 19.74593 24.099907 17.483398 25 15 25 C 9.80344 25 5.5490109 21.062074 5.0488281 16 L 8 16 L 4 10 z"></path></svg>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let validCaptchas = [
+        {weight: 0.5, data: "randomnumber"},
+      ]
+      let verifybtn = document.getElementById('verify-btn')
+      let regeneratebtn = document.getElementById('regenerate-btn')
+      let errormessage = document.getElementById('errormessage')
+
+      let onverify = () => {}
+      let onreset = () => {}
+      let intervals = []
+      let timeouts = []
+      window.addEventListener("message", (e) => {
+        let data = e.data
+        if (data.type === "clear_error") {errormessage.innerText = ""}
+        if (data.type === "error_message") {errormessage.innerText = data.message}
+      })
+      function getIframeURL() {
+        let captchaFile = validCaptchas[Math.floor(Math.random()*validCaptchas.length)]
+        while (typeof captchaFile === "object") {
+          captchaFile = captchaFile[Math.floor(Math.random()*captchaFile.length)]
+        }
+        return {type:captchaFile,html:HtmlService.createHtmlOutputFromFile(captchaFile).getContent()};
+      }
+      let isFirstCaptcha = true
+      let captchaIframe = document.getElementById("captcha-frame")
+      function getRandomCaptcha(captchas) {
+        if (isFirstCaptcha) {
+          isFirstCaptcha = false
+          let urlParams = new URLSearchParams(window.location.search)
+
+          if (urlParams.get("captcha")) {
+            return urlParams.get("captcha")
+          }
+        }
+        if (typeof captchas !== "object") return captchas
+        let totalWeights = 0
+        for (let weight of captchas) {
+          totalWeights += weight.weight
+        }
+        let selectedWeight = totalWeights*Math.random()
+        let currentWeight = 0
+        for (let weight of captchas) {
+          currentWeight += weight.weight
+          if (currentWeight >= selectedWeight) {
+            weight.weight /= 5
+            return getRandomCaptcha(weight.data)
+          }
+        }
+        alert("An error occurred. This should not happen. Actually, there is no way this can even happen. Why are you reading this? Thanks for wasting your time reading this message.")
+      }
+      function getScaleCSS(size) {
+        return `width:${100*size}%;height:${100*size}%;transform:scale(${1/size}) translate(-${(size-1)*50}%, -${(size-1)*50}%)`
+      }
+      function loadIframeContent() {
+        captchaIframe.src = `data:text/html,<style>body,html{height:100%;margin:0}body{display:grid;place-items:center}h1{margin:0}</style><h1>Loading Captcha...</h1>`
+        setTimeout(() => {
+          captchaIframe.style = "width: 100%; height: 100%"
+          verifybtn.classList.add("disabled")
+          for (let i of timeouts) clearTimeout(i)
+          for (let i of intervals) clearInterval(i)
+          timeouts = false
+          intervals = false // any intervals called before loading will error
+          errormessage.innerText = ""
+          errormessage.style = ""
+          onverify = () => {}
+          onreset()
+          onreset = () => {}
+          document.body.style = ""
+
+          let doubleSizeCSS = getScaleCSS(2)
+          let quadSizeCSS = getScaleCSS(4)
+
+          let iframeURL = getRandomCaptcha(validCaptchas)
+          console.log(iframeURL)
+          window.DEBUG&&(iframeURL = "riggedplinko-1")
+          let newStyles = "width: 100%; height: 100%"
+          if (iframeURL === "platformer-1") newStyles = "height: 100%; width: auto; aspect-ratio:1"
+          if (iframeURL === "riggedplinko-1") newStyles = "height: 500px; width: auto; aspect-ratio:1;transform: scale(0.6) translate(-25%, -33.333%)"
+          if (iframeURL === "index") newStyles = "width: 700px; height: 600px; transform: scale(0.5) translate(-50%, -50%); display: block; aspect-ratio: 7 / 6;"
+          if (iframeURL === "wordguess-1") newStyles = "width:200%; height:300%; transform:scale(0.3333) translate(-75%, -100%)"
+          if (["appel-1","impossiblegame-2","epicninja-1","osu-1","osu-2","osu-3", "osu-4", "osu-5", "crossyroad-1", "saharshclicker-1", "timing-1", "eye-test-1", "infinitecaptchas-1", "perfect-circle", "rps"].includes(iframeURL)) newStyles = doubleSizeCSS
+          if (["selectAllPixels-1","selectAllPixels-2"].includes(iframeURL)) newStyles = getScaleCSS(1.07)
+          if (iframeURL === "selectAllPixels-3") newStyles = getScaleCSS(1.12)
+          if (["chess-1"].includes(iframeURL)) newStyles = quadSizeCSS
+          if (iframeURL === "pool-1") newStyles = getScaleCSS(2.7)
+          if (iframeURL === "stock-trading") newStyles = getScaleCSS(3)
+          if (iframeURL === "proof-1") {
+            verifybtn.classList.remove("disabled")
+            onverify = () => {
+              errormessage.style = "text-align: left"
+              errormessage.innerHTML = "Your answer is incorrect. Tips to correct your answer: <ol><li>Check over your work</li><li>Explain your work</li><li>Stay on topic</li></ol>"
+            }
+          }
+          captchaIframe.style = newStyles
+
+          timeouts = []
+          intervals = []
+          if (iframeURL === "crossyroad-1") iframeURL = "https://securecentrix81.github.io/crossy-road/impossible"
+
+          document.getElementById("captcha-frame").src = (window.DEBUG?"https://securecentrix81.github.io/captcha-verification/":"")+iframeURL
+        },100)
+      }
+      verifybtn.addEventListener("click", (e) => {
+        onverify()
+      })
+      regeneratebtn.addEventListener("click", (e) => {
+        loadIframeContent()
+      })
+      loadIframeContent()
+    </script>
+  </body>
+</html>
