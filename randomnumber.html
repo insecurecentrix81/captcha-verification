@@ -6,5 +6,15 @@
 </head>
 <body>
     <h3 style="text-align:center">Generate a 1 to pass</h3>
+    <button style="font-size: 1.3em" onclick="generateNum();">Generate</button>
+    <script>
+        function generateNum() {
+            let num = 1;
+            if (Math.random() < 0.9999) {
+                num = Math.ceil(Math.random()*1e12);
+            }
+            window.parent.postMessage({type: "randomnumber", number: num}, "*")
+        }
+    </script>
 </body>
 </html>

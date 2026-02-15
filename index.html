@@ -141,11 +141,20 @@
       let onreset = () => {}
       let intervals = []
       let timeouts = []
+
       window.addEventListener("message", (e) => {
         let data = e.data
         if (data.type === "clear_error") {errormessage.innerText = ""}
         if (data.type === "error_message") {errormessage.innerText = data.message}
+        if (data.type === "randomnumber") {
+            if (data.num === 1) {
+                verifybtn.classList.remove("disabled");
+            } else {
+                verifybtn.classList.add("disabled");
+            }
+        }
       })
+
       function getIframeURL() {
         let captchaFile = validCaptchas[Math.floor(Math.random()*validCaptchas.length)]
         while (typeof captchaFile === "object") {
@@ -206,7 +215,7 @@
           console.log(iframeURL)
           window.DEBUG&&(iframeURL = "riggedplinko-1")
           let newStyles = "width: 100%; height: 100%"
-          if (iframeURL === "platformer-1") newStyles = "height: 100%; width: auto; aspect-ratio:1"
+          /*if (iframeURL === "platformer-1") newStyles = "height: 100%; width: auto; aspect-ratio:1"
           if (iframeURL === "riggedplinko-1") newStyles = "height: 500px; width: auto; aspect-ratio:1;transform: scale(0.6) translate(-25%, -33.333%)"
           if (iframeURL === "index") newStyles = "width: 700px; height: 600px; transform: scale(0.5) translate(-50%, -50%); display: block; aspect-ratio: 7 / 6;"
           if (iframeURL === "wordguess-1") newStyles = "width:200%; height:300%; transform:scale(0.3333) translate(-75%, -100%)"
@@ -222,7 +231,7 @@
               errormessage.style = "text-align: left"
               errormessage.innerHTML = "Your answer is incorrect. Tips to correct your answer: <ol><li>Check over your work</li><li>Explain your work</li><li>Stay on topic</li></ol>"
             }
-          }
+          }*/
           captchaIframe.style = newStyles
 
           timeouts = []
