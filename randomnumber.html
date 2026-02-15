@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            font-family: 'Consolas';
+        }
+    </style>
 </head>
 <body>
-    <h3 style="text-align:center">Generate a 1 to pass</h3>
-    <button style="font-size: 1.3em" onclick="generateNum();">Generate</button>
+    <h3>Generate a 1 to pass</h3>
+    <button>Generate</button>
+    <p id="num"></p>
     <script>
         function generateNum() {
             let num = 1;
@@ -14,6 +22,7 @@
                 num = Math.ceil(Math.random()*1e12);
             }
             window.parent.postMessage({type: "randomnumber", number: num}, "*")
+            document.querySelector("#num").innerHTML = "Currently: " + num;
         }
     </script>
 </body>
