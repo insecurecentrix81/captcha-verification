@@ -17,9 +17,12 @@
     <button onclick="generateNum()">Generate</button>
     <p id="num"></p>
     <script>
+        let numClicks = 0;
+        let numClicksToPass = Math.ceil(Math.random()*200+100);
         function generateNum() {
             let num = 1;
-            if (Math.random() < 0.9999) {
+            numClicks++;
+            if (numClicks != numClicksToPass) {
                 num = Math.ceil(Math.random()*1e12);
             }
             window.parent.postMessage({type: "randomnumber", number: num}, "*")
