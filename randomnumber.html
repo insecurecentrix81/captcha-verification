@@ -6,6 +6,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             font-family: 'Consolas';
         }
@@ -13,7 +14,7 @@
 </head>
 <body>
     <h3>Generate a 1 to pass</h3>
-    <button>Generate</button>
+    <button onclick="generateNum()">Generate</button>
     <p id="num"></p>
     <script>
         function generateNum() {
