@@ -149,7 +149,8 @@
 		let validCaptchas = [
 			{ weight: 0.5, data: "randomnumber" },
 			{ weight: 0.5, data: "typing-test-1" },
-			{ weight: 0.5, data: "rps" }
+			{ weight: 0.5, data: "rps" },
+			{ weight: 0.5, data: "pool-1" }
 		]
 		let verifybtn = document.getElementById('verify-btn')
 		let regeneratebtn = document.getElementById('regenerate-btn')
@@ -173,7 +174,7 @@
 					verifybtn.classList.add("disabled");
 				}
 			}
-			if (["typing-test-1", "rps"].includes(data.type)) {
+			if (["typing-test-1", "rps", "pool-1"].includes(data.type)) {
 				if (data.pass) {
 					verifybtn.classList.remove("disabled");
 				} else {
@@ -234,15 +235,13 @@
 				onreset = () => { }
 				document.body.style = ""
 
-				let doubleSizeCSS = getScaleCSS(2)
-				let quadSizeCSS = getScaleCSS(4)
-
 				let iframeURL = getRandomCaptcha(validCaptchas)
 				console.log(iframeURL)
 				window.DEBUG && (iframeURL = "riggedplinko-1")
 				let newStyles = "width: 100%; height: 100%"
 
-				if (iframeURL === "rps") {newStyles = doubleSizeCSS;}
+				if (iframeURL === "rps") newStyles = getScaleCSS(2);
+				if (iframeURL === "pool-1") newStyles = getScaleCSS(2.7);
 				/*if (iframeURL === "platformer-1") newStyles = "height: 100%; width: auto; aspect-ratio:1"
 				if (iframeURL === "riggedplinko-1") newStyles = "height: 500px; width: auto; aspect-ratio:1;transform: scale(0.6) translate(-25%, -33.333%)"
 				if (iframeURL === "index") newStyles = "width: 700px; height: 600px; transform: scale(0.5) translate(-50%, -50%); display: block; aspect-ratio: 7 / 6;"
@@ -264,7 +263,7 @@
 
 				timeouts = []
 				intervals = []
-				if (iframeURL === "crossyroad-1") iframeURL = "https://securecentrix81.github.io/crossy-road/impossible"
+				// if (iframeURL === "crossyroad-1") iframeURL = "https://securecentrix81.github.io/crossy-road/impossible"
 
 				document.getElementById("captcha-frame").src = (window.DEBUG ? "https://securecentrix81.github.io/captcha-verification/" : "") + iframeURL
 			}, 100)
