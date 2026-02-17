@@ -917,25 +917,26 @@
 
           if (allPocketed && !foulThisTurn) {
             gameOver = true;
-            /*if (currentPlayer === 1) {
-              setMessage(`AI wins! (Uncaught ReferenceError: userWinsGame is not defined)`);
+            if (currentPlayer === 1) {
+              window.parent.postMessage({type: "pool-1", pass: true}, "*");
+              /*setMessage(`AI wins! (Uncaught ReferenceError: userWinsGame is not defined)`);
               updateUI()
               alert("Uncaught ReferenceError: userWinsGame is not defined")
-              throw ReferenceError("userWinsGame is not defined") // can't win :D
-            }*/
+              throw ReferenceError("userWinsGame is not defined") // can't win :D*/
+            }
             const winner = currentPlayer === 1 ? 'You win!' : 'AI wins!' 
             setMessage(`🎉 ${winner}`);
             updateUI();
-            window.parent.postMessage({type: "pool-1", pass: true}, "*");
             return;
           } else {
             gameOver = true;
-            /*if (currentPlayer !== 1) {
-              setMessage(`AI wins! (Uncaught ReferenceError: userWinsGame is not defined)`);
+            if (currentPlayer !== 1) {
+              window.parent.postMessage({type: "pool-1", pass: true}, "*");
+              /*setMessage(`AI wins! (Uncaught ReferenceError: userWinsGame is not defined)`);
               updateUI()
               alert("Uncaught ReferenceError: userWinsGame is not defined")
-              throw ReferenceError("userWinsGame is not defined") // can't win :D
-            }*/
+              throw ReferenceError("userWinsGame is not defined") // can't win :D*/
+            }
             const winner = currentPlayer === 1 ? 'AI wins!' : 'You win!'
             setMessage(`🎉 ${winner} (8-ball foul)`);
             updateUI();
