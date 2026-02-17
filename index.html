@@ -157,7 +157,9 @@
 		let errormessage = document.getElementById('errormessage')
 
 		let onverify = () => {
-			window.location.replace("endpage.html");
+			if (!verifybtn.classList.contains("disabled")) {
+				window.location.replace("endpage.html");
+			}
 		}
 		let onreset = () => { }
 		let intervals = []
