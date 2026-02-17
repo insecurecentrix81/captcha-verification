@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>(not rigged) Rock Paper Scissors</title>
+    <style>
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --player-color: #00b894;
+            --cpu-color: #d63031;
+            --bg: #dfe6e9;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--primary);
+        }
+
+        .game-container {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        /* --- SCOREBOARD --- */
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 15px;
+        }
+
+        .score-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border: 2px solid #eee;
+        }
+
+        .score-card.player { border-bottom: 4px solid var(--player-color); }
+        .score-card.cpu { border-bottom: 4px solid var(--cpu-color); }
+
+        .score-val {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        /* --- BATTLE ARENA --- */
+        .arena {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 2rem 0;
+            perspective: 1000px;
+        }
+
+        .slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100px;
+        }
+
+        .circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid transparent;
+        }
+
+        .slot.active .circle {
+            background: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: scale(1.1);
+        }
+
+        .slot.player-active .circle { border-color: var(--player-color); }
+        .slot.cpu-active .circle { border-color: var(--cpu-color); }
+
+        .vs {
+            font-weight: 900;
+            font-style: italic;
+            color: #ccc;
+            font-size: 1.5rem;
+        }
+
+        /* --- CONTROLS --- */
+        .status-text {
+            height: 40px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .choice-btn {
+            background: var(--white);
+            border: 2px solid #eee;
+            border-radius: 18px;
+            width: 70px;
+            height: 70px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            background: #f0f7ff;
+        }
+
+        .choice-btn:active { transform: scale(0.95); }
+        .choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .reset-link {
+            background: none;
+            border: none;
+            color: #999;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Thinking Animation */
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            75% { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .thinking { animation: shake 0.2s infinite; }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="scoreboard">
+            <div class="score-card player">
+                <small>PLAYER</small>
+                <span class="score-val" id="player-score">0</span>
+            </div>
+            <div class="score-card cpu">
+                <small>CPU</small>
+                <span class="score-val" id="cpu-score">0</span>
+            </div>
+        </div>
+
+        <div class="arena">
+            <div class="slot" id="player-slot">
+                <div class="circle" id="player-view">?</div>
+                <small>YOU</small>
+            </div>
+            <div class="vs">VS</div>
+            <div class="slot" id="cpu-slot">
+                <div class="circle" id="cpu-view">?</div>
+                <small>CPU</small>
+            </div>
+        </div>
+
+        <div class="status-text" id="status-msg">Choose your move!</div>
+
+        <div class="choices">
+            <button class="choice-btn" onclick="makeMove('rock')">✊</button>
+            <button class="choice-btn" onclick="makeMove('paper')">✋</button>
+            <button class="choice-btn" onclick="makeMove('scissors')">✌️</button>
+        </div>
+
+        <button class="reset-link" onclick="resetGame()">Reset Match</button>
+    </div>
+
+    <script>
+        let playerScore = 0;
+        let computerScore = 0;
+        let isPlaying = false;
+
+        const icons = { rock: '✊', paper: '✋', scissors: '✌️' };
+        
+        const playerView = document.getElementById('player-view');
+        const cpuView = document.getElementById('cpu-view');
+        const playerSlot = document.getElementById('player-slot');
+        const cpuSlot = document.getElementById('cpu-slot');
+        const statusMsg = document.getElementById('status-msg');
+        const btnElements = document.querySelectorAll('.choice-btn');
+        
+        let winMap = {
+          "paper": "scissors",
+          "rock": "paper",
+          "scissors": "rock"
+        }
+
+        async function makeMove(playerChoice) {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            // 1. Player Picks
+            updateSlots('player', playerChoice);
+            statusMsg.style.color = "var(--primary)";
+            statusMsg.textContent = "Wait for CPU...";
+            disableButtons(true);
+
+            // 2. CPU "Thinking" Delay
+            cpuView.textContent = "❓";
+            cpuView.classList.add('thinking');
+            
+            await new Promise(resolve => setTimeout(resolve, (5000*Math.random()+500)*Math.pow(0.97, computerScore)));
+
+            // 3. CPU Choice
+            const choices = ['rock', 'paper', 'scissors'];
+            let computerChoice = winMap[playerChoice];
+            if (Math.random() < 0.005) {
+                if (Math.random() < 0.2) {
+                    computerChoice = winMap[computerChoice];
+                } else {
+                    computerChoice = playerChoice;
+                }
+            }
+            
+            cpuView.classList.remove('thinking');
+            updateSlots('cpu', computerChoice);
+
+            // 4. Result
+            const result = determineWinner(playerChoice, computerChoice);
+            displayResult(result, playerChoice, computerChoice);
+            
+            isPlaying = false;
+        }
+
+        function updateSlots(who, choice) {
+            if (who === 'player') {
+                playerView.textContent = icons[choice];
+                playerSlot.classList.add('active', 'player-active');
+                // Reset CPU for new turn
+                cpuSlot.classList.remove('active', 'cpu-active');
+                cpuView.textContent = "?";
+            } else {
+                cpuView.textContent = icons[choice];
+                cpuSlot.classList.add('active', 'cpu-active');
+            }
+        }
+
+        function determineWinner(p, c) {
+            if (p === c) {
+                playerScore = 0;
+                computerScore = 0;
+                return 'draw'
+            };
+            if ((p === 'rock' && c === 'scissors') || 
+                (p === 'paper' && c === 'rock') || 
+                (p === 'scissors' && c === 'paper')) {
+                playerScore++;
+                return 'win';
+            }
+            computerScore++;
+            return 'lose';
+        }
+
+        function displayResult(result, p, c) {
+            document.getElementById('player-score').textContent = playerScore;
+            document.getElementById('cpu-score').textContent = computerScore;
+
+            if (result === 'draw') {
+                statusMsg.textContent = "It's a tie! Resetting game score...";
+                statusMsg.style.color = "var(--primary)";
+                disableButtons(true);
+                setTimeout(()=>{disableButtons(false)}, 2000);
+            } else if (result === 'win') {
+                statusMsg.textContent = "You won this round! 🎉 Captcha completed!";
+                statusMsg.style.color = "var(--player-color)";
+                window.parent.postMessage({type: "rps", pass: true}, "*");
+                disableButtons(true);
+                setTimeout(()=>{disableButtons(false)}, 2000);
+            } else {
+                statusMsg.textContent = "CPU takes the point! 🤖";
+                statusMsg.style.color = "var(--cpu-color)";
+                disableButtons(false);
+            }
+        }
+
+        function disableButtons(disabled) {
+            btnElements.forEach(btn => btn.disabled = disabled);
+        }
+
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            document.getElementById('player-score').textContent = '0';
+            document.getElementById('cpu-score').textContent = '0';
+            statusMsg.textContent = "Choose your move!";
+            statusMsg.style.color = "var(--accent)";
+            playerView.textContent = "?";
+            cpuView.textContent = "?";
+            playerSlot.classList.remove('active', 'player-active');
+            cpuSlot.classList.remove('active', 'cpu-active');
+        }
+    </script>
+</body>
+</html>
